@@ -1,0 +1,51 @@
+---
+strategy: polling
+no_screen_padding: 'no'
+dark_mode: 'no'
+static_data: ''
+polling_verb: get
+framework_version: 3.0.2
+serverless_language: ''
+polling_url: "https://api.jolpi.ca/ergast/f1/current/driverStandings.json\r\nhttps://api.jolpi.ca/ergast/f1/current/next.json\r\nhttps://api.jolpi.ca/ergast/f1/current/last.json\r\nhttps://api.jolpi.ca/ergast/f1/current/last/qualifying.json\r\nhttps://api.jolpi.ca/ergast/f1/2025/driverStandings.json\r\nhttps://api.jolpi.ca/ergast/f1/current/constructorStandings.json\r\nhttps://api.jolpi.ca/ergast/f1/2025/constructorStandings.json"
+polling_headers: ''
+polling_body: ''
+id: 251959
+oauth_enabled: 'false'
+oauth_pkce_enabled: 'no'
+oauth_authorize_url: ''
+oauth_token_url: ''
+oauth_scopes: ''
+oauth_scope_separator: ''
+oauth_refresh_url: ''
+oauth_auth_params: ''
+oauth_token_headers: ''
+oauth_token_site: ''
+oauth_token_params: ''
+oauth_token_request_auth_method: ''
+oauth_body_format: ''
+oauth_token_response_metadata: ''
+oauth_authorization_method: ''
+oauth_refresh_params: ''
+oauth_token_field_name: ''
+oauth_expiry_field_name: ''
+oauth_expiry_strategy: ''
+oauth_fixed_expiry_ms: ''
+custom_fields:
+- keyname: author_bio
+  field_type: author_bio
+  name: About This Plugin
+  category: entertainment,sports
+  description: This dashboard brings you everything you need for the upcoming F1 race. See the full weekend schedule with session times in your local timezone, the iconic circuit layout, and current driver standings, all at a glance. Once qualifying wraps up, the starting grid replaces the standings so you know exactly who's on pole. After the checkered flag drops, watch the updated championship standings roll in. On other screens, the info is limited, but still handy for the race fans.
+  help_text: Due to the API, the information can come trough at a later time. Please wait...
+  email_address: trmnl@achtnegen.nl
+- keyname: time_format
+  field_type: select
+  name: Time Format
+  description: Choose how session and race times are displayed.
+  options:
+  - 24-hour (18:00): 24h
+  - 12-hour (6:00PM): 12h
+  default: 24h
+name: 'Formula 1 '
+description: Race and Standings
+refresh_interval: 60
