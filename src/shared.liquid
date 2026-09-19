@@ -1,13 +1,14 @@
 <style>
-  .shadow {
+  /* Scoped to .f1-plugin so these don't leak into other plugins in a mashup */
+  .f1-plugin .shadow {
     box-shadow: 2px 2px 0px black;
   }
 
-  .avatar {
+  .f1-plugin .avatar {
     object-position: top;
   }
 
-  .bold {
+  .f1-plugin .bold {
     font-weight: bold;
     letter-spacing: 2px;
   }
@@ -19,7 +20,7 @@
   IDX_1 = next race
   IDX_2 = last race
   IDX_3 = qualifying results
-  IDX_4 = 2025 standings (fallback)
+  IDX_4 = previous season standings (fallback, year computed in polling_url)
 {% endcomment %}
 
 {% comment %} === TIME FORMAT SETTING === {% endcomment %}
@@ -42,7 +43,7 @@
   {% assign standings_season = IDX_4.MRData.StandingsTable.season %}
 {% else %}
   {% assign driver_standings = null %}
-  {% assign standings_season = "2026" %}
+  {% assign standings_season = "now" | date: "%Y" %}
 {% endif %}
 
 {% comment %} === NEXT RACE === {% endcomment %}
@@ -241,5 +242,5 @@
   {% assign constructor_season = IDX_6.MRData.StandingsTable.season %}
 {% else %}
   {% assign constructor_standings = null %}
-  {% assign constructor_season = "2026" %}
+  {% assign constructor_season = "now" | date: "%Y" %}
 {% endif %}

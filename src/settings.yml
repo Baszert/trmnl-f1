@@ -6,7 +6,7 @@ static_data: ''
 polling_verb: get
 framework_version: 3.0.2
 serverless_language: ''
-polling_url: "https://api.jolpi.ca/ergast/f1/current/driverStandings.json\r\nhttps://api.jolpi.ca/ergast/f1/current/next.json\r\nhttps://api.jolpi.ca/ergast/f1/current/last.json\r\nhttps://api.jolpi.ca/ergast/f1/current/last/qualifying.json\r\nhttps://api.jolpi.ca/ergast/f1/2025/driverStandings.json\r\nhttps://api.jolpi.ca/ergast/f1/current/constructorStandings.json\r\nhttps://api.jolpi.ca/ergast/f1/2025/constructorStandings.json"
+polling_url: "https://api.jolpi.ca/ergast/f1/current/driverStandings.json\r\nhttps://api.jolpi.ca/ergast/f1/current/next.json\r\nhttps://api.jolpi.ca/ergast/f1/current/last.json\r\nhttps://api.jolpi.ca/ergast/f1/current/last/qualifying.json\r\nhttps://api.jolpi.ca/ergast/f1/{{ 'now' | date: '%Y' | minus: 1 }}/driverStandings.json\r\nhttps://api.jolpi.ca/ergast/f1/current/constructorStandings.json\r\nhttps://api.jolpi.ca/ergast/f1/{{ 'now' | date: '%Y' | minus: 1 }}/constructorStandings.json"
 polling_headers: ''
 polling_body: ''
 id: 251959
