@@ -1,0 +1,245 @@
+<style>
+  .shadow {
+    box-shadow: 2px 2px 0px black;
+  }
+
+  .avatar {
+    object-position: top;
+  }
+
+  .bold {
+    font-weight: bold;
+    letter-spacing: 2px;
+  }
+</style>
+
+{% comment %}
+  Parse all F1 data into usable variables
+  IDX_0 = current season standings
+  IDX_1 = next race
+  IDX_2 = last race
+  IDX_3 = qualifying results
+  IDX_4 = 2025 standings (fallback)
+{% endcomment %}
+
+{% comment %} === TIME FORMAT SETTING === {% endcomment %}
+{% assign time_format = trmnl.plugin_settings.custom_fields_values.time_format | default: '24h' %}
+{% if time_format == '12h' %}
+  {% assign time_pattern = '%-I:%M%p' %}
+{% else %}
+  {% assign time_pattern = '%H:%M' %}
+{% endif %}
+
+{% comment %} === DRIVER STANDINGS === {% endcomment %}
+{% assign current_standings_lists = IDX_0.MRData.StandingsTable.StandingsLists %}
+{% assign prev_standings_lists = IDX_4.MRData.StandingsTable.StandingsLists %}
+
+{% if current_standings_lists.first %}
+  {% assign driver_standings = current_standings_lists.first.DriverStandings %}
+  {% assign standings_season = IDX_0.MRData.StandingsTable.season %}
+{% elsif prev_standings_lists.first %}
+  {% assign driver_standings = prev_standings_lists.first.DriverStandings %}
+  {% assign standings_season = IDX_4.MRData.StandingsTable.season %}
+{% else %}
+  {% assign driver_standings = null %}
+  {% assign standings_season = "2026" %}
+{% endif %}
+
+{% comment %} === NEXT RACE === {% endcomment %}
+{% assign next_race_list = IDX_1.MRData.RaceTable.Races %}
+{% if next_race_list.first %}
+  {% assign next_race = next_race_list.first %}
+{% else %}
+  {% assign next_race = null %}
+{% endif %}
+
+{% comment %} === RACE STATUS (LIVE / COUNTDOWN / UPCOMING) === {% endcomment %}
+{% if next_race and next_race.date and next_race.time %}
+  {% assign race_datetime = next_race.date | append: 'T' | append: next_race.time %}
+  {% assign race_timestamp = race_datetime | date: '%s' | plus: 0 %}
+  {% assign current_time = trmnl.system.timestamp_utc | plus: 0 %}
+  {% assign seconds_until = race_timestamp | minus: current_time %}
+  {% assign hours_until = seconds_until | divided_by: 3600.0 %}
+  
+  {% if hours_until < 0 and hours_until > -3 %}
+    {% assign race_status = 'LIVE' %}
+  {% elsif hours_until < 24 and hours_until > 0 %}
+    {% assign race_status = 'COUNTDOWN' %}
+  {% else %}
+    {% assign race_status = 'UPCOMING' %}
+  {% endif %}
+{% else %}
+  {% assign race_status = 'UPCOMING' %}
+  {% assign hours_until = 999 %}
+  {% assign race_timestamp = 0 %}
+  {% assign current_time = trmnl.system.timestamp_utc %}
+{% endif %}
+
+{% comment %} === QUALIFYING RESULTS === {% endcomment %}
+{% assign qualifying_race_list = IDX_3.MRData.RaceTable.Races %}
+{% assign show_qualifying = false %}
+{% assign qualifying_results = null %}
+
+{% if qualifying_race_list.first %}
+  {% assign qualifying_results = qualifying_race_list.first.QualifyingResults %}
+  {% assign last_race_list = IDX_2.MRData.RaceTable.Races %}
+  
+  {% if last_race_list.first and next_race %}
+    {% assign last_race = last_race_list.first %}
+    {% if last_race.round == next_race.round and race_timestamp > current_time %}
+      {% assign show_qualifying = true %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+
+{% comment %} === SESSION TIMES (with status) === {% endcomment %}
+{% if next_race %}
+  {% comment %} FP1 {% endcomment %}
+  {% if next_race.FirstPractice %}
+    {% assign fp1_datetime = next_race.FirstPractice.date | append: 'T' | append: next_race.FirstPractice.time %}
+    {% assign fp1_timestamp = fp1_datetime | date: '%s' %}
+    {% assign fp1_diff = fp1_timestamp | minus: current_time %}
+    {% assign fp1_local = fp1_timestamp | plus: trmnl.user.utc_offset | date: time_pattern %}
+    
+    {% if fp1_diff < -3600 %}
+      {% assign fp1_status = 'done' %}
+      {% assign fp1_display = '✓' %}
+    {% elsif fp1_diff < 0 %}
+      {% assign fp1_status = 'live' %}
+      {% assign fp1_display = 'LIVE' %}
+    {% else %}
+      {% assign fp1_status = 'upcoming' %}
+      {% assign fp1_display = fp1_local %}
+    {% endif %}
+  {% endif %}
+  
+  {% comment %} FP2 {% endcomment %}
+  {% if next_race.SecondPractice %}
+    {% assign fp2_datetime = next_race.SecondPractice.date | append: 'T' | append: next_race.SecondPractice.time %}
+    {% assign fp2_timestamp = fp2_datetime | date: '%s' %}
+    {% assign fp2_diff = fp2_timestamp | minus: current_time %}
+    {% assign fp2_local = fp2_timestamp | plus: trmnl.user.utc_offset | date: time_pattern %}
+    
+    {% if fp2_diff < -3600 %}
+      {% assign fp2_status = 'done' %}
+      {% assign fp2_display = '✓' %}
+    {% elsif fp2_diff < 0 %}
+      {% assign fp2_status = 'live' %}
+      {% assign fp2_display = 'LIVE' %}
+    {% else %}
+      {% assign fp2_status = 'upcoming' %}
+      {% assign fp2_display = fp2_local %}
+    {% endif %}
+  {% endif %}
+  
+  {% comment %} FP3 {% endcomment %}
+  {% if next_race.ThirdPractice %}
+    {% assign fp3_datetime = next_race.ThirdPractice.date | append: 'T' | append: next_race.ThirdPractice.time %}
+    {% assign fp3_timestamp = fp3_datetime | date: '%s' %}
+    {% assign fp3_diff = fp3_timestamp | minus: current_time %}
+    {% assign fp3_local = fp3_timestamp | plus: trmnl.user.utc_offset | date: time_pattern %}
+    
+    {% if fp3_diff < -3600 %}
+      {% assign fp3_status = 'done' %}
+      {% assign fp3_display = '✓' %}
+    {% elsif fp3_diff < 0 %}
+      {% assign fp3_status = 'live' %}
+      {% assign fp3_display = 'LIVE' %}
+    {% else %}
+      {% assign fp3_status = 'upcoming' %}
+      {% assign fp3_display = fp3_local %}
+    {% endif %}
+  {% endif %}
+  
+  {% comment %} Sprint {% endcomment %}
+  {% if next_race.Sprint %}
+    {% assign sprint_datetime = next_race.Sprint.date | append: 'T' | append: next_race.Sprint.time %}
+    {% assign sprint_timestamp = sprint_datetime | date: '%s' %}
+    {% assign sprint_diff = sprint_timestamp | minus: current_time %}
+    {% assign sprint_local = sprint_timestamp | plus: trmnl.user.utc_offset | date: time_pattern %}
+    
+    {% if sprint_diff < -3600 %}
+      {% assign sprint_status = 'done' %}
+      {% assign sprint_display = '✓' %}
+    {% elsif sprint_diff < 0 %}
+      {% assign sprint_status = 'live' %}
+      {% assign sprint_display = 'LIVE' %}
+    {% else %}
+      {% assign sprint_status = 'upcoming' %}
+      {% assign sprint_display = sprint_local %}
+    {% endif %}
+  {% endif %}
+  
+  {% comment %} Qualifying {% endcomment %}
+  {% if next_race.Qualifying %}
+    {% assign quali_datetime = next_race.Qualifying.date | append: 'T' | append: next_race.Qualifying.time %}
+    {% assign quali_timestamp = quali_datetime | date: '%s' %}
+    {% assign quali_diff = quali_timestamp | minus: current_time %}
+    {% assign quali_local = quali_timestamp | plus: trmnl.user.utc_offset | date: time_pattern %}
+    
+    {% if quali_diff < -3600 %}
+      {% assign quali_status = 'done' %}
+      {% assign quali_display = '✓' %}
+    {% elsif quali_diff < 0 %}
+      {% assign quali_status = 'live' %}
+      {% assign quali_display = 'LIVE' %}
+    {% else %}
+      {% assign quali_status = 'upcoming' %}
+      {% assign quali_display = quali_local %}
+    {% endif %}
+  {% endif %}
+
+{% comment %} Sprint Qualifying {% endcomment %}
+{% if next_race.SprintQualifying %}
+  {% assign sprint_quali_datetime = next_race.SprintQualifying.date | append: 'T' | append: next_race.SprintQualifying.time %}
+  {% assign sprint_quali_timestamp = sprint_quali_datetime | date: '%s' %}
+  {% assign sprint_quali_diff = sprint_quali_timestamp | minus: current_time %}
+  {% assign sprint_quali_local = sprint_quali_timestamp | plus: trmnl.user.utc_offset | date: time_pattern %}
+  
+  {% if sprint_quali_diff < -3600 %}
+    {% assign sprint_quali_status = 'done' %}
+    {% assign sprint_quali_display = '✓' %}
+  {% elsif sprint_quali_diff < 0 %}
+    {% assign sprint_quali_status = 'live' %}
+    {% assign sprint_quali_display = 'LIVE' %}
+  {% else %}
+    {% assign sprint_quali_status = 'upcoming' %}
+    {% assign sprint_quali_display = sprint_quali_local %}
+  {% endif %}
+{% endif %}
+  
+  {% comment %} Race {% endcomment %}
+  {% assign race_local = race_timestamp | plus: trmnl.user.utc_offset | date: time_pattern %}
+  {% if race_status == 'LIVE' %}
+    {% assign race_display = 'LIVE' %}
+  {% else %}
+    {% assign race_display = race_local %}
+  {% endif %}
+{% endif %}
+
+{% comment %} === FORMATTED RACE DATE === {% endcomment %}
+{% if next_race %}
+  {% assign race_date_formatted = next_race.date | date: '%b %d, %Y' %}
+  {% assign race_date_short = next_race.date | date: '%b %d' %}
+{% endif %}
+
+{% comment %} === COUNTDOWN CALCULATION === {% endcomment %}
+{% if race_status == 'COUNTDOWN' %}
+  {% assign countdown_hours = hours_until | floor %}
+  {% assign countdown_minutes = hours_until | minus: countdown_hours | times: 60 | floor %}
+{% endif %}
+
+{% comment %} === CONSTRUCTOR STANDINGS === {% endcomment %}
+{% assign current_constructor_lists = IDX_5.MRData.StandingsTable.StandingsLists %}
+{% assign prev_constructor_lists = IDX_6.MRData.StandingsTable.StandingsLists %}
+
+{% if current_constructor_lists.first %}
+  {% assign constructor_standings = current_constructor_lists.first.ConstructorStandings %}
+  {% assign constructor_season = IDX_5.MRData.StandingsTable.season %}
+{% elsif prev_constructor_lists.first %}
+  {% assign constructor_standings = prev_constructor_lists.first.ConstructorStandings %}
+  {% assign constructor_season = IDX_6.MRData.StandingsTable.season %}
+{% else %}
+  {% assign constructor_standings = null %}
+  {% assign constructor_season = "2026" %}
+{% endif %}

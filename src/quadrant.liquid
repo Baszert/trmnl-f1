@@ -1,0 +1,138 @@
+{% if driver_standings and next_race %}
+<div class="layout layout--col">
+  <div class="flex flex--col gap--none h--full w--full">
+    <div class="flex flex--col gap w--full h--full lg:portrait:h--auto">
+      <div class="bg--gray-75 p--4 stretch h--full rounded">
+
+        {% comment %} Race Details {% endcomment %}
+        <div class="text-stroke flex flex--col flex--left gap">
+        {% comment %} Race Status {% endcomment %}
+        {% assign race_tag_css = 'p--1 lg:p--2 lg:pb--1 shadow' %}
+        <div class="mb--1 flex flex--col flex--left">
+          {% if race_status == 'LIVE' %}
+          <span class="label--small lg:value--xxsmall bg--black text--white {{race_tag_css}}">LIVE</span>
+          {% elsif race_status == 'COUNTDOWN' %}
+          <span class="label--small lg:value--xxsmall bg--gray-20 text--white {{race_tag_css}}">RACE DAY</span>
+          {% else %}
+          <span class="label--small lg:value--xxsmall bg--white {{race_tag_css}}">NEXT RACE</span>
+          {% endif %}
+        </div>
+
+
+          <div class="grid lg:flex lg:flex--col lg:flex--left w--full">
+          <img class="h--[85px] lg:h--[110px] w--full image image--contain" src="https://trmnl.achtnegen.nl/F1-dashboard/circuit/{{ next_race.Circuit.circuitId }}.png">
+          <div class="title title--small lg:title--large w--full">{{ next_race.raceName }}</div>
+          </div>
+
+          <div class="grid w--full">
+            {% comment %} Countdown / Date {% endcomment %}
+            {% if race_status == 'COUNTDOWN' %}
+            <div>
+              <div class="label--small">Race starts in</div>
+              <div class="label">{{ countdown_hours }}h {{ countdown_minutes }}m</div>
+            </div>
+            {% else %}
+            <div class="">
+              <div class="label--small">Race Date</div>
+              <div class="label">{{ race_date_formatted }}</div>
+            </div>
+            {% endif %}
+
+            <div>
+              <div class="label--small">Round</div>
+              <div class="label">Round {{ next_race.round }}</div>
+            </div>
+          </div>
+
+          <div class="grid w--full md:hidden lg:grid">
+          <div class="">
+            <div class="label--small">Location</div>
+            <div class="label">{{ next_race.Circuit.Location.locality }}, {{ next_race.Circuit.Location.country }}</div>
+          </div>
+
+          <div class="">
+            <div class="label--small">Circuit</div>
+            <div class="label">{{ next_race.Circuit.circuitName }}</div>
+          </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+     <div class="col--span-2 flex flex--col gap--none pt--3 stretch w--full md:hidden lg:hidden lg:portrait:block">
+      <div class="w--full mb--1">
+        {% if show_qualifying %}
+        <span class="title title--small">🏁 STARTING GRID</span>
+        {% else %}
+        <span class="title title--small">DRIVER STANDINGS <span class="text--gray-20">{{ standings_season }}</span> </span>
+        {% endif %}
+      </div>
+
+      <div class="flex flex--col w--full gap--xsmall">
+
+        {% if show_qualifying %}
+        <table class="table" data-table-limit="true">
+          <thead>
+            <tr>
+              <th><span class="label--small"></span></th>
+              <th><span class="label--small">Driver</span></th>
+              <th><span class="label--small">Q3</span></th>
+              <th><span class="label--small">Q2</span></th>
+              <th><span class="label--small">Q1</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for result in qualifying_results limit: 2 %}
+            <tr class="
+              hidden
+              {% if forloop.index < 2 %}table-row{% endif %}
+              {% if forloop.index < 2 %}lg:table-row{% endif %}
+              {% if forloop.index < 2 %}lg:portrait:table-row{% endif %}
+              ">
+              <td><span class="label w--[20px]">{{ result.position }}</span></td>
+              <td><span class="label">
+                <div class="w--[32px] h--[32px] mr--2 bg--gray-75 rounded--full"><img class="image-dither w--full h--full image image--cover avatar" src="https://trmnl.achtnegen.nl/F1-dashboard/drivers/{{ result.Driver.permanentNumber }}.avif"></div>
+                {{ result.Driver.givenName }} {{ result.Driver.familyName }}
+              </span></td>
+              <td><span class="label label--small">{{ result.Q3 }}</span></td>
+              <td><span class="label label--small">{{ result.Q2 }}</span></td>
+              <td><span class="label label--small">{{ result.Q1 }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <table class="table mt--1" data-table-limit="true">
+          <tbody>
+            {% for standing in driver_standings limit: 2 %}
+            <tr>
+              <td><span class="label w--[20px]">{{ standing.position }}</span></td>
+              <td><span class="label">
+                <div class="w--[32px] h--[32px] mr--2 bg--gray-75 rounded--full"><img class="image-dither w--full h--full image image--cover avatar" src="https://trmnl.achtnegen.nl/F1-dashboard/drivers/{{ standing.Driver.permanentNumber }}.avif"></div>
+                {{ standing.Driver.givenName }} {{ standing.Driver.familyName }}
+              </span></td>
+              <td><span class="label label--small">
+                <div class="w--[24px] h--[24px] mr--2 bg--black rounded--full p--1"><img class="image-dither w--full h--full image image--cover avatar" src="https://trmnl.achtnegen.nl/F1-dashboard/constructor/{{ standing.Constructors[0].constructorId }}.avif"></div>
+                {{ standing.Constructors[0].name | truncate: 15 }}</span></td>
+              <td><span class="label">{{ standing.points }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% else %}
+<div class="layout">
+  <div class="flex flex--col flex--center-x flex--center-y h--full">
+    <span class="title title--large mb--small">🏎️ Getting F1 Data</span>
+    <span class="label text--gray">3.. 2... 1... please wait.</span>
+  </div>
+</div>
+{% endif %}
